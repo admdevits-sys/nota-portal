@@ -35,10 +35,11 @@ yarn-error.log*
 pnpm-debug.log*
 
 # --------------
-# Editor & IDE
+# Editor & IDE & Dev tools
 # --------------
 .idea/
 .vscode/
+.claude/
 *.swp
 *.swo
 *~
