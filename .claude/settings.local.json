@@ -17,17 +17,9 @@
       "Bash(grep -l \"indigo\\\\|violet\\\\|emerald-500\\\\|blue-500\" pages/*.tsx routes/*.tsx components/*.tsx)",
       "Bash(grep -l \"indigo\\\\|violet\\\\|emerald\" pages/*.tsx routes/*.tsx components/*.tsx)",
       "Bash(grep -l \"indigo\\\\|violet\\\\|emerald\\\\|blue-500\" frontend/src/pages/*.tsx frontend/src/components/*.tsx)",
-      "Bash(git remote remove origin)",
-      "Bash(git branch --unset-upstream main)",
-      "Bash(git remote set-url origin https://github.com/admdevits-sys/nota-portal.git)",
-      "Bash(git push -u origin main)",
-      "Bash(gh repo create nota-portal --public --source=. --remote=origin)",
-      "Bash(git remote set-url origin https://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@github.com/admdevits-sys/nota-portal.git)",
-      "Bash(git init)",
-      "Bash(git remote add origin https://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@github.com/admdevits-sys/nota-portal.git)",
       "Bash(git add -A)",
-      "Bash(git commit -m \"First commit\")",
-      "Bash(git rm -rf --cached .git.bak)"
+      "Bash(git commit -m \"Remove tokens from settings\")",
+      "Bash(git push -u origin main)"
     ]
   }
 }
