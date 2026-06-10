@@ -1,0 +1,10 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	url = https://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@github.com/admdevits-sys/nota-portal.git
+	fetch = +refs/heads/*:refs/remotes/origin/*

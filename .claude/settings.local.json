@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install tailwind-merge clsx)",
+      "Bash(npm run build)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx prisma migrate dev --name add_validacoes_xml)",
+      "Bash(npx prisma migrate deploy)",
+      "Bash(npx prisma migrate dev --name add_danfse_fields --create-only)",
+      "WebFetch(domain:adn.nfse.gov.br)",
+      "Bash(ls -la backend/*.mjs backend/*.ts)",
+      "Bash(npx prisma migrate dev --name add_logs_sistema --create-only)",
+      "Bash(npx prisma migrate dev --name add_logs_sistema --create-only --accept-data-loss)",
+      "Bash(npx prisma generate)",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''http://127.0.0.1:3001/api/auth/login'' -Method Post -ContentType ''application/json'' -Body \\(@{email=''admin@gmail.com'';senha=''12345678''} | ConvertTo-Json\\)\")",
+      "Bash(powershell -Command \"$token = \\(Invoke-RestMethod -Uri ''http://127.0.0.1:3001/api/auth/login'' -Method Post -ContentType ''application/json'' -Body \\(@{email=''admin@gmail.com'';senha=''12345678''} | ConvertTo-Json\\)\\).token; Write-Host ''Testing permissoes...''; Invoke-RestMethod -Uri ''http://127.0.0.1:3001/api/permissoes'' -Headers @{Authorization=\"\"Bearer $token\"\"}\")",
+      "Bash(grep -l \"indigo\\\\|violet\\\\|emerald-500\\\\|blue-500\" pages/*.tsx routes/*.tsx components/*.tsx)",
+      "Bash(grep -l \"indigo\\\\|violet\\\\|emerald\" pages/*.tsx routes/*.tsx components/*.tsx)",
+      "Bash(grep -l \"indigo\\\\|violet\\\\|emerald\\\\|blue-500\" frontend/src/pages/*.tsx frontend/src/components/*.tsx)",
+      "Bash(git remote remove origin)",
+      "Bash(git branch --unset-upstream main)",
+      "Bash(git remote set-url origin https://github.com/admdevits-sys/nota-portal.git)",
+      "Bash(git push -u origin main)",
+      "Bash(gh repo create nota-portal --public --source=. --remote=origin)",
+      "Bash(git remote set-url origin https://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@github.com/admdevits-sys/nota-portal.git)",
+      "Bash(git init)",
+      "Bash(git remote add origin https://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@github.com/admdevits-sys/nota-portal.git)",
+      "Bash(git add -A)",
+      "Bash(git commit -m \"First commit\")"
+    ]
+  }
+}

@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model perfis {
+  PK_perfil_id Int        @id @default(autoincrement())
+  nome         String     @unique @db.VarChar(50)
+  descricao    String?    @db.VarChar(255)
+  data_criacao DateTime   @default(now())
+  usuarios     usuarios[]
+  permissoes   permissoes_perfis[]
+}
+
+model usuarios {
+  PK_usuario_id    String           @id @db.Char(36)
+  fk_perfil_id     Int
+  nome             String           @db.VarChar(100)
+  email            String           @unique @db.VarChar(150)
+  senha_hash       String           @db.VarChar(255)
+  ativo            Boolean          @default(true)
+  data_criacao     DateTime         @default(now())
+  data_atualizacao DateTime         @updatedAt
+  importacoes      importacoes[]
+  logs_auditoria   logs_auditoria[]
+  logs_sistema     logs_sistema[]
+  validacoes_xml   validacoes_xml[]
+  perfil           perfis           @relation(fields: [fk_perfil_id], references: [PK_perfil_id])
+
+  @@index([fk_perfil_id])
+}
+
+model logs_auditoria {
+  PK_log_id           BigInt    @id @default(autoincrement())
+  fk_usuario_id       String?   @db.Char(36)
+  acao                String    @db.VarChar(100)
+  tabela_afetada      String?   @db.VarChar(50)
+  registro_afetado_id String?   @db.VarChar(50)
+  endereco_ip         String    @db.VarChar(45)
+  agente_usuario      String    @db.VarChar(255)
+  detalhes            String?   @db.LongText
+  data_criacao        DateTime  @default(now())
+  usuario             usuarios? @relation(fields: [fk_usuario_id], references: [PK_usuario_id])
+
+  @@index([fk_usuario_id, acao], map: "idx_auditoria_usuario_acao")
+}
+
+model logs_sistema {
+  PK_log_id           BigInt    @id @default(autoincrement())
+  fk_usuario_id       String?   @db.Char(36)
+  modulo              String    @db.VarChar(50)
+  acao                String    @db.VarChar(100)
+  tabela_afetada      String?   @db.VarChar(50)
+  registro_afetado_id String?   @db.VarChar(50)
+  descricao           String    @db.VarChar(255)
+  detalhes            String?   @db.LongText
+  endereco_ip         String    @db.VarChar(45)
+  agente_usuario      String    @db.VarChar(255)
+  data_criacao        DateTime  @default(now())
+  usuario             usuarios? @relation(fields: [fk_usuario_id], references: [PK_usuario_id])
+
+  @@index([fk_usuario_id, modulo, data_criacao], map: "idx_logs_sistema_usuario_modulo")
+  @@index([modulo, data_criacao], map: "idx_logs_sistema_modulo_data")
+}
+
+model importacoes {
+  PK_importacao_id      String           @id @db.Char(36)
+  fk_usuario_id         String           @db.Char(36)
+  nome_arquivo          String           @db.VarChar(255)
+  hash_arquivo          String           @unique @db.Char(64)
+  tamanho_arquivo_bytes BigInt
+  status                StatusImportacao @default(PENDENTE)
+  total_registros       Int              @default(0)
+  registros_processados Int              @default(0)
+  log_erros             String?          @db.LongText
+  data_hora_inicio      DateTime?
+  data_hora_fim         DateTime?
+  data_criacao          DateTime         @default(now())
+  usuario               usuarios         @relation(fields: [fk_usuario_id], references: [PK_usuario_id])
+  notas_fiscais         notas_fiscais[]
+
+  @@index([status], map: "idx_importacoes_status")
+  @@index([data_criacao], map: "idx_importacoes_data")
+  @@index([fk_usuario_id], map: "importacoes_fk_usuario_id_fkey")
+}
+
+model notas_fiscais {
+  PK_nota_fiscal_id          String                   @id @db.Char(36)
+  fk_importacao_id           String                   @db.Char(36)
+  tipo_documento             TipoDocumento
+  chave_acesso               String                   @unique @db.VarChar(100)
+  numero_documento           String                   @db.VarChar(50)
+  data_emissao               DateTime
+  documento_emitente         String                   @db.VarChar(20)
+  nome_emitente              String                   @db.VarChar(150)
+  documento_destinatario     String?                  @db.VarChar(20)
+  nome_destinatario          String?                  @db.VarChar(150)
+  valor_total                Decimal                  @db.Decimal(15, 2)
+  total_impostos             Decimal                  @default(0.00) @db.Decimal(15, 2)
+  xml_bruto_json             String?                  @db.LongText
+  data_criacao               DateTime                 @default(now())
+  fk_empresa_destinatario_id String?                  @db.Char(36)
+  fk_empresa_emitente_id     String?                  @db.Char(36)
+  dados_transporte           dados_transporte[]
+  duplicatas_financeiras     duplicatas_financeiras[]
+  impostos_nota              impostos_nota[]
+  itens_nota_fiscal          itens_nota_fiscal[]
+  destinatario_empresa       empresas?                @relation("destinatario", fields: [fk_empresa_destinatario_id], references: [PK_empresa_id])
+  emitente_empresa           empresas?                @relation("emitente", fields: [fk_empresa_emitente_id], references: [PK_empresa_id])
+  importacao                 importacoes              @relation(fields: [fk_importacao_id], references: [PK_importacao_id], onDelete: Cascade)
+  servicos_nota_fiscal       servicos_nota_fiscal[]
+
+  @@index([tipo_documento, data_emissao], map: "idx_notas_tipo_data")
+  @@index([documento_emitente], map: "idx_notas_emitente")
+  @@index([fk_empresa_emitente_id], map: "idx_notas_emitente_empresa")
+  @@index([fk_empresa_destinatario_id], map: "idx_notas_destinatario_empresa")
+  @@index([fk_importacao_id], map: "notas_fiscais_fk_importacao_id_fkey")
+}
+
+model itens_nota_fiscal {
+  PK_item_id        BigInt                @id @default(autoincrement())
+  fk_nota_fiscal_id String                @db.Char(36)
+  numero_item       Int
+  codigo_produto    String?               @db.VarChar(50)
+  descricao         String                @db.VarChar(255)
+  ncm               String?               @db.VarChar(10)
+  cfop              String?               @db.VarChar(10)
+  quantidade        Decimal               @db.Decimal(15, 4)
+  valor_unitario    Decimal               @db.Decimal(15, 4)
+  valor_total       Decimal               @db.Decimal(15, 2)
+  fk_produto_id     String?               @db.Char(36)
+  nota              notas_fiscais         @relation(fields: [fk_nota_fiscal_id], references: [PK_nota_fiscal_id], onDelete: Cascade)
+  produto           produtos_cadastrados? @relation(fields: [fk_produto_id], references: [PK_produto_id])
+
+  @@index([fk_nota_fiscal_id])
+  @@index([fk_produto_id])
+}
+
+model servicos_nota_fiscal {
+  PK_servico_id     BigInt                @id @default(autoincrement())
+  fk_nota_fiscal_id String                @db.Char(36)
+  codigo_servico    String?               @db.VarChar(50)
+  descricao         String                @db.Text
+  valor_servico     Decimal               @db.Decimal(15, 2)
+  valor_issqn       Decimal               @default(0.00) @db.Decimal(15, 2)
+  deducoes          Decimal               @default(0.00) @db.Decimal(15, 2)
+  fk_servico_id     String?               @db.Char(36)
+  nota              notas_fiscais         @relation(fields: [fk_nota_fiscal_id], references: [PK_nota_fiscal_id], onDelete: Cascade)
+  servico           servicos_cadastrados? @relation(fields: [fk_servico_id], references: [PK_servico_id])
+
+  @@index([fk_nota_fiscal_id])
+  @@index([fk_servico_id])
+}
+
+model servicos_cadastrados {
+  PK_servico_id String                 @id @db.Char(36)
+  codigo        String?                @unique @db.VarChar(100)
+  descricao     String                 @db.VarChar(255)
+  preco         Decimal                @default(0.00) @db.Decimal(15, 2)
+  categoria     String?                @db.VarChar(100)
+  data_criacao  DateTime               @default(now())
+  servicos      servicos_nota_fiscal[]
+}
+
+model duplicatas_financeiras {
+  PK_duplicata_id   String        @id @db.Char(36)
+  fk_nota_fiscal_id String        @db.Char(36)
+  numero_duplicata  String        @db.VarChar(50)
+  data_vencimento   DateTime
+  valor             Decimal       @db.Decimal(15, 2)
+  status            String        @default("PENDENTE") @db.VarChar(50)
+  data_criacao      DateTime      @default(now())
+  nota              notas_fiscais @relation(fields: [fk_nota_fiscal_id], references: [PK_nota_fiscal_id], onDelete: Cascade)
+
+  @@index([fk_nota_fiscal_id])
+}
+
+model dados_transporte {
+  PK_transporte_id       String        @id @db.Char(36)
+  fk_nota_fiscal_id      String        @db.Char(36)
+  modal                  String?       @db.VarChar(50)
+  placa                  String?       @db.VarChar(20)
+  uf                     String?       @db.VarChar(2)
+  nome_transportador     String?       @db.VarChar(255)
+  cnpj_cpf_transportador String?       @db.VarChar(20)
+  cidade_origem          String?       @db.VarChar(100)
+  cidade_destino         String?       @db.VarChar(100)
+  valor_frete            Decimal       @default(0.00) @db.Decimal(15, 2)
+  data_criacao           DateTime      @default(now())
+  nota                   notas_fiscais @relation(fields: [fk_nota_fiscal_id], references: [PK_nota_fiscal_id], onDelete: Cascade)
+
+  @@index([fk_nota_fiscal_id])
+}
+
+model impostos_nota {
+  PK_imposto_id     String        @id @db.Char(36)
+  fk_nota_fiscal_id String        @db.Char(36)
+  icms_base         Decimal       @default(0.00) @db.Decimal(15, 2)
+  icms_valor        Decimal       @default(0.00) @db.Decimal(15, 2)
+  pis_valor         Decimal       @default(0.00) @db.Decimal(15, 2)
+  cofins_valor      Decimal       @default(0.00) @db.Decimal(15, 2)
+  ipi_valor         Decimal       @default(0.00) @db.Decimal(15, 2)
+  issqn_valor       Decimal       @default(0.00) @db.Decimal(15, 2)
+  total_tributos    Decimal       @default(0.00) @db.Decimal(15, 2)
+  data_criacao      DateTime      @default(now())
+  nota              notas_fiscais @relation(fields: [fk_nota_fiscal_id], references: [PK_nota_fiscal_id], onDelete: Cascade)
+
+  @@index([fk_nota_fiscal_id])
+}
+
+model empresas {
+  PK_empresa_id String          @id @db.Char(36)
+  cnpj_cpf      String          @unique @db.VarChar(20)
+  razao_social  String          @db.VarChar(255)
+  nome_fantasia String?         @db.VarChar(255)
+  endereco      String?         @db.VarChar(255)
+  cidade        String?         @db.VarChar(100)
+  uf            String?         @db.VarChar(2)
+  telefone      String?         @db.VarChar(20)
+  email         String?         @db.VarChar(150)
+  data_criacao  DateTime        @default(now())
+  recebidas     notas_fiscais[] @relation("destinatario")
+  emitidas      notas_fiscais[] @relation("emitente")
+}
+
+model produtos_cadastrados {
+  PK_produto_id String              @id @db.Char(36)
+  codigo        String              @unique @db.VarChar(100)
+  descricao     String              @db.VarChar(255)
+  ncm           String?             @db.VarChar(20)
+  cfop          String?             @db.VarChar(20)
+  unidade       String?             @db.VarChar(20)
+  preco         Decimal             @default(0.0000) @db.Decimal(15, 4)
+  data_criacao  DateTime            @default(now())
+  itens         itens_nota_fiscal[]
+}
+
+enum TipoDocumento {
+  NFE
+  NFSE
+}
+
+enum StatusImportacao {
+  PENDENTE
+  PROCESSANDO
+  CONCLUIDO
+  FALHOU
+  PARCIAL
+}
+
+model validacoes_xml {
+  PK_validacao_id      String              @id @db.Char(36)
+  fk_usuario_id        String              @db.Char(36)
+  tipo_documento       TipoDocumento
+  chave_acesso         String              @db.VarChar(100)
+  numero_documento     String              @db.VarChar(50)
+  cnpj_emitente        String              @db.VarChar(20)
+  nome_emitente        String              @db.VarChar(150)
+  cnpj_destinatario    String?             @db.VarChar(20)
+  nome_destinatario    String?             @db.VarChar(150)
+  valor_total          String              @db.VarChar(20)
+  status               StatusValidacao     @default(PENDENTE)
+  situacao_fiscal      String?             @db.VarChar(50)
+  protocolo            String?             @db.VarChar(50)
+  data_autorizacao     DateTime?
+  erros_json           String?             @db.LongText
+  xml_bruto            String?             @db.LongText
+  danfse_url           String?             @db.VarChar(500)
+  danfse_path          String?             @db.VarChar(500)
+  data_criacao         DateTime           @default(now())
+  usuario               usuarios           @relation(fields: [fk_usuario_id], references: [PK_usuario_id])
+
+  @@index([tipo_documento])
+  @@index([chave_acesso])
+  @@index([status])
+  @@index([data_criacao])
+}
+
+enum StatusValidacao {
+  PENDENTE
+  PROCESSANDO
+  VALIDO
+  INVALIDO
+  ERRO_CONSULTA
+}
+
+// Permissões do sistema
+model permissoes {
+  PK_permissao_id    BigInt              @id @default(autoincrement())
+  modulo             String              @db.VarChar(50)      // DASHBOARD, IMPORTACAO, NOTAS, USUARIOS, VALIDACAO, CADASTROS, LOGS, CONFIG
+  acao               String              @db.VarChar(100)      // VIEW, CREATE, UPDATE, DELETE, EXPORT
+  descricao          String?             @db.VarChar(255)
+  data_criacao       DateTime            @default(now())
+  perfis             permissoes_perfis[]
+
+  @@unique([modulo, acao], name: "uk_permissao_modulo_acao")
+  @@index([modulo])
+}
+
+// Relação many-to-many entre perfis e permissões
+model permissoes_perfis {
+  PK_permissao_perfil_id BigInt      @id @default(autoincrement())
+  fk_perfil_id           Int
+  fk_permissao_id        BigInt
+  ativo                  Boolean     @default(true)
+  data_criacao           DateTime    @default(now())
+  perfil                 perfis      @relation(fields: [fk_perfil_id], references: [PK_perfil_id], onDelete: Cascade)
+  permissao              permissoes  @relation(fields: [fk_permissao_id], references: [PK_permissao_id], onDelete: Cascade)
+
+  @@unique([fk_perfil_id, fk_permissao_id], name: "uk_perfil_permissao")
+  @@index([fk_perfil_id])
+  @@index([fk_permissao_id])
+}
