@@ -84,6 +84,11 @@ tmp/
 temp/
 *.tmp
 *.temp
+todo.md
+TODO.md
+TODOS.md
+NOTES.md
+CHANGELOG.md
 
 # --------------
 # Cloud sync folders
