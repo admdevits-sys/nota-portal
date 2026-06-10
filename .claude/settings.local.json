@@ -26,7 +26,8 @@
       "Bash(git init)",
       "Bash(git remote add origin https://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@github.com/admdevits-sys/nota-portal.git)",
       "Bash(git add -A)",
-      "Bash(git commit -m \"First commit\")"
+      "Bash(git commit -m \"First commit\")",
+      "Bash(git rm -rf --cached .git.bak)"
     ]
   }
 }
